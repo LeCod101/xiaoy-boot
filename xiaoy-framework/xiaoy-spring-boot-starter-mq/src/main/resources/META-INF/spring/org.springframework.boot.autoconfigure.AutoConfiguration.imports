@@ -1,0 +1,3 @@
+cn.xiaoy.framework.mq.redis.config.XiaoyRedisMQProducerAutoConfiguration
+cn.xiaoy.framework.mq.redis.config.XiaoyRedisMQConsumerAutoConfiguration
+cn.xiaoy.framework.mq.rabbitmq.config.XiaoyRabbitMQAutoConfiguration

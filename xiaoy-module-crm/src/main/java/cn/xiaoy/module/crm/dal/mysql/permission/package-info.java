@@ -1,0 +1,1 @@
+package cn.xiaoy.module.crm.dal.mysql.permission;

@@ -1,0 +1,30 @@
+package cn.xiaoy.module.ai.framework.ai.core.websearch;
+
+import cn.xiaoy.framework.common.util.json.JsonUtils;
+import cn.xiaoy.module.ai.framework.ai.core.webserch.AiWebSearchRequest;
+import cn.xiaoy.module.ai.framework.ai.core.webserch.AiWebSearchResponse;
+import cn.xiaoy.module.ai.framework.ai.core.webserch.bocha.AiBoChaWebSearchClient;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+/**
+ * {@link AiBoChaWebSearchClient} 集成测试类
+ *
+ * @author 小Y系统
+ */
+public class AiBoChaWebSearchClientTest {
+
+    private final AiBoChaWebSearchClient webSearchClient = new AiBoChaWebSearchClient(
+            "sk-your-api-key");
+
+    @Test
+    @Disabled
+    public void testSearch() {
+        AiWebSearchRequest request = new AiWebSearchRequest()
+                .setQuery("阿里巴巴")
+                .setCount(3);
+        AiWebSearchResponse response = webSearchClient.search(request);
+        System.out.println(JsonUtils.toJsonPrettyString(response));
+    }
+
+}

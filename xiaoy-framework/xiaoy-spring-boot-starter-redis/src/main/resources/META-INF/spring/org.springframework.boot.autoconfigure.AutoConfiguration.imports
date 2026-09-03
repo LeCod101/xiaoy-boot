@@ -1,0 +1,2 @@
+cn.xiaoy.framework.redis.config.XiaoyRedisAutoConfiguration
+cn.xiaoy.framework.redis.config.XiaoyCacheAutoConfiguration

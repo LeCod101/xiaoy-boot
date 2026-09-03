@@ -1,0 +1,3 @@
+cn.xiaoy.framework.security.config.XiaoySecurityAutoConfiguration
+cn.xiaoy.framework.security.config.XiaoyWebSecurityConfigurerAdapter
+cn.xiaoy.framework.operatelog.config.XiaoyOperateLogConfiguration

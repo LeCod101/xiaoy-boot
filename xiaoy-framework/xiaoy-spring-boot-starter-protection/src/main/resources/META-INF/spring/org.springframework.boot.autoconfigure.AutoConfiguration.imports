@@ -1,0 +1,4 @@
+cn.xiaoy.framework.idempotent.config.XiaoyIdempotentConfiguration
+cn.xiaoy.framework.lock4j.config.XiaoyLock4jConfiguration
+cn.xiaoy.framework.ratelimiter.config.XiaoyRateLimiterConfiguration
+cn.xiaoy.framework.signature.config.XiaoyApiSignatureAutoConfiguration

@@ -1,0 +1,3 @@
+cn.xiaoy.framework.datasource.config.XiaoyDataSourceAutoConfiguration
+cn.xiaoy.framework.mybatis.config.XiaoyMybatisAutoConfiguration
+cn.xiaoy.framework.translate.config.XiaoyTranslateAutoConfiguration

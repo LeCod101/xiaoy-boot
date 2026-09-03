@@ -1,0 +1,2 @@
+cn.xiaoy.framework.quartz.config.XiaoyQuartzAutoConfiguration
+cn.xiaoy.framework.quartz.config.XiaoyAsyncAutoConfiguration

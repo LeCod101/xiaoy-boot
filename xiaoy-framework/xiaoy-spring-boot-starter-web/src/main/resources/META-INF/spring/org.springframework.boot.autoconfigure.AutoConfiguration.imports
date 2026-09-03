@@ -1,0 +1,7 @@
+cn.xiaoy.framework.apilog.config.XiaoyApiLogAutoConfiguration
+cn.xiaoy.framework.jackson.config.XiaoyJacksonAutoConfiguration
+cn.xiaoy.framework.swagger.config.XiaoySwaggerAutoConfiguration
+cn.xiaoy.framework.web.config.XiaoyWebAutoConfiguration
+cn.xiaoy.framework.xss.config.XiaoyXssAutoConfiguration
+cn.xiaoy.framework.banner.config.XiaoyBannerAutoConfiguration
+cn.xiaoy.framework.encrypt.config.XiaoyApiEncryptAutoConfiguration

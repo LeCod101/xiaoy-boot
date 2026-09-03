@@ -1,0 +1,2 @@
+cn.xiaoy.framework.tracer.config.XiaoyTracerAutoConfiguration
+cn.xiaoy.framework.tracer.config.XiaoyMetricsAutoConfiguration
