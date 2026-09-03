@@ -1,0 +1,180 @@
+# 生产环境配置模板 —— 商用交付时按客户环境填 env，不要把密钥写回这个文件。
+#
+# 启用方式（二选一）：
+#   java -jar xiaoy-server.jar --spring.profiles.active=prod
+#   SPRING_PROFILES_ACTIVE=prod java -jar xiaoy-server.jar
+#
+# 密钥类变量刻意不给默认值：缺变量直接启动失败，比悄悄用上一个错的默认值安全。
+# 上线前请对照 docs/上线检查清单.md 逐项过一遍。
+
+server:
+  port: ${SERVER_PORT:48080}
+
+--- #################### 数据库相关配置 ####################
+
+spring:
+  autoconfigure:
+    # noinspection SpringBootApplicationYaml
+    exclude:
+      - com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure # 使用 dynamic-datasource 管理多数据源
+      - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
+      - org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration
+  datasource:
+    druid:
+      web-stat-filter:
+        enabled: false # 生产不开 Druid 的请求统计过滤器
+      stat-view-servlet:
+        enabled: false # 生产必须关掉 /druid 控制台。确实要留，就把 allow 白名单和账号密码一起配上
+        allow: ${DRUID_ALLOW_IPS:127.0.0.1}
+        url-pattern: /druid/*
+        login-username: ${DRUID_USERNAME:}
+        login-password: ${DRUID_PASSWORD:}
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true # 慢 SQL 记录
+          slow-sql-millis: 200
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: false # 生产禁止一次执行多条语句，收窄 SQL 注入面
+    dynamic:
+      druid: # 连接池，按机器规格和并发量调
+        initial-size: 10
+        min-idle: 10
+        max-active: ${DB_MAX_ACTIVE:50}
+        max-wait: 30000
+        time-between-eviction-runs-millis: 60000
+        min-evictable-idle-time-millis: 600000
+        max-evictable-idle-time-millis: 1800000
+        validation-query: SELECT 1 FROM DUAL
+        test-while-idle: true
+        test-on-borrow: false
+        test-on-return: false
+        pool-prepared-statements: true
+        max-pool-prepared-statement-per-connection-size: 20
+      primary: master
+      datasource:
+        master:
+          url: ${DB_URL} # 例：jdbc:mysql://db-host:3306/xiaoy?useSSL=true&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
+          username: ${DB_USERNAME}
+          password: ${DB_PASSWORD}
+        slave: # 没有从库时，默认回落到主库
+          lazy: true
+          url: ${DB_SLAVE_URL:${DB_URL}}
+          username: ${DB_SLAVE_USERNAME:${DB_USERNAME}}
+          password: ${DB_SLAVE_PASSWORD:${DB_PASSWORD}}
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+    password: ${REDIS_PASSWORD} # 生产的 Redis 必须设密码，且不要暴露到公网
+
+--- #################### 定时任务相关配置 ####################
+
+spring:
+  quartz:
+    auto-startup: true
+    scheduler-name: xiaoySchedulerProd
+    job-store-type: jdbc
+    wait-for-jobs-to-complete-on-shutdown: true
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: xiaoySchedulerProd
+            instanceId: AUTO
+          jobStore:
+            class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+            isClustered: true
+            clusterCheckinInterval: 15000
+            misfireThreshold: 60000
+          threadPool:
+            threadCount: 25
+            threadPriority: 5
+            class: org.quartz.simpl.SimpleThreadPool
+    jdbc:
+      initialize-schema: NEVER # 表结构由 sql/*/quartz.sql 手动建
+
+--- #################### 服务保障相关配置 ####################
+
+lock4j:
+  acquire-timeout: 3000
+  expire: 30000
+
+--- #################### 监控相关配置 ####################
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: 'health,info' # 生产只暴露这两个；开 '*' 会连 env、beans、heapdump 一起放出去
+  endpoint:
+    health:
+      show-details: never
+
+spring:
+  boot:
+    admin:
+      client:
+        enabled: ${BOOT_ADMIN_ENABLED:false} # 默认不注册到 Spring Boot Admin
+        url: ${BOOT_ADMIN_URL:}
+        username: ${BOOT_ADMIN_USERNAME:}
+        password: ${BOOT_ADMIN_PASSWORD:}
+        instance:
+          service-host-type: IP
+      context-path: /admin
+
+logging:
+  file:
+    name: ${LOG_FILE:/var/log/xiaoy/xiaoy-server.log}
+  level:
+    root: info
+    cn.xiaoy: info # 生产不要开 debug，Mapper 的 SQL 会把日志刷爆
+
+--- #################### 接口文档：生产关闭 ####################
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+knife4j:
+  enable: false # /doc.html 在生产等于把全部接口和参数结构公开
+
+--- #################### 小Y相关配置 ####################
+
+xiaoy:
+  captcha:
+    enable: true # 生产必须开图形验证码，否则登录接口可被撞库
+  security:
+    mock-enable: false # 绝不能为 true —— 为 true 时用 mock-secret（默认字面量 test）伪造的 token 可以直接过认证
+    password-encoder-length: 10 # BCrypt 强度。框架默认只有 4，上游为了演示登录快，生产至少 10
+  access-log:
+    enable: true
+  demo: false # 演示模式会拦截写操作，生产必须关
+  xss:
+    enable: false # 打开前先确认富文本字段（如系统通知的 HTML 内容）不会被过滤坏，需要时配 exclude-urls
+  api-encrypt:
+    enable: ${API_ENCRYPT_ENABLE:false} # 开启后前端 .env 里的密钥必须与这里完全一致
+    algorithm: AES
+    request-key: ${API_ENCRYPT_REQUEST_KEY:}
+    response-key: ${API_ENCRYPT_RESPONSE_KEY:}
+  web:
+    admin-ui:
+      url: ${ADMIN_UI_URL} # 管理后台对外地址，用于邮件、短信里的跳转链接
+  swagger:
+    email: ${CONTACT_EMAIL:}
+  tenant:
+    enable: ${TENANT_ENABLE:true} # 单客户交付通常可以关掉，关之前确认业务表里的 tenant_id 处理方式
+  pay: # 支付回调必须是公网可达的 HTTPS 地址
+    order-notify-url: ${PUBLIC_BASE_URL}/admin-api/pay/notify/order
+    refund-notify-url: ${PUBLIC_BASE_URL}/admin-api/pay/notify/refund
+    transfer-notify-url: ${PUBLIC_BASE_URL}/admin-api/pay/notify/transfer
+  tencent-lbs-key: ${TENCENT_LBS_KEY:}
+
+justauth:
+  enabled: false # 用到钉钉/企业微信/微信扫码登录时再打开，并逐个补 client-id / client-secret
