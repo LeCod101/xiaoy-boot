@@ -229,7 +229,7 @@
                     <artifactId>enjoy</artifactId>
                 </exclusion>
                 <exclusion>
-                    <!-- 解决 https://localhost/xiaoy/pulls/1318/ 问题 -->
+                    <!-- 解决上游 ruoyi-vue-pro PR #1318 的问题 -->
                     <groupId>com.agentsflex</groupId>
                     <artifactId>agents-flex-store-elasticsearch</artifactId>
                 </exclusion>
